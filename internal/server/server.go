@@ -10,6 +10,9 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"websocket/handler"
+
+	"github.com/gorilla/websocket"
 )
 
 type apiServer struct {
@@ -38,8 +41,16 @@ func NewAPIServer(opts ...optsAPIServer) *apiServer {
 }
 
 func (s *apiServer) Init() {
+	// DEPS INJ
+	upgrader := &websocket.Upgrader{}
+	webSocketHandler := handler.NewWebSocketHandler(handler.WithCustomUpgrader(upgrader))
+
 	// ROUTER INIT
 	r := http.NewServeMux()
+
+	// ROUTING
+	r.HandleFunc("GET /websocket", webSocketHandler.ClientWebSocket)
+	r.HandleFunc("POST /broadcast", webSocketHandler.BroadcastMessage)
 
 	// Server
 	httpServer := &http.Server{
